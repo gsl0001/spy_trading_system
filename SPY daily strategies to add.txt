@@ -1,0 +1,72 @@
+SPY daily strategies to add
+1) 20/50 daily trend pullback
+Entry: SPY is above the 20-day and 50-day moving averages, then pulls back to the 20-day with a bullish daily candle close.
+
+Exit: Take profit into the prior swing high or use a trailing stop under higher lows.
+
+Risk: Stop below the pullback low; keep risk fixed before entry.
+
+Works best for: Bull trends and calm-to-moderate volatility.
+
+2) Daily breakout above range
+Entry: SPY closes above a 10–20 day consolidation high on expanding volume.
+
+Exit: First target at 1R to 2R, then trail under daily higher lows.
+
+Risk: Stop back inside the prior range.
+
+Works best for: Strong momentum and post-news continuation.
+
+3) Daily mean reversion to VWAP/20DMA
+Entry: SPY stretches far below the 20-day average or daily VWAP zone after a sharp selloff, then prints a reversal candle.
+
+Exit: Scale out at the 5-day/20-day mean; trail the rest.
+
+Risk: Stop below the panic low.
+
+Works best for: Oversold market flushes and range-bound regimes.
+
+4) Bull put spread on daily support
+Entry: SPY is above rising daily support, IV is not too cheap, and price holds a prior daily low or moving average.
+
+Exit: Close at 50% to 80% of max profit or on a daily close below support.
+
+Risk: Defined-risk spread only; size small enough that one loss is manageable.
+
+Works best for: Mildly bullish or sideways markets.
+
+5) Bear call spread on daily resistance
+Entry: SPY is below falling resistance, near a prior swing high, and daily momentum weakens.
+
+Exit: Close early when spread captures most of the credit.
+
+Risk: Exit if SPY closes above the short strike or breaks resistance strongly.
+
+Works best for: Weak tape, failed rallies, and high-IV environments.
+
+6) Iron condor on compressed daily range
+Entry: SPY sits in a tight daily range, implied volatility is elevated, and expected move is larger than realized movement.
+
+Exit: Buy back at 50% to 70% of max credit or when one side is threatened.
+
+Risk: Defined loss; avoid oversized wings and event risk.
+
+Works best for: Sideways markets and weeks with no major catalyst.
+
+7) Daily inside-bar breakout
+Entry: A daily inside bar forms after a strong trend day; trade the break of the mother bar high or low.
+
+Exit: Measured move or next daily support/resistance.
+
+Risk: Stop on the opposite side of the mother bar.
+
+Works best for: Trend continuation or volatility expansion after compression.
+
+8) 3-day pullback in uptrend
+Entry: In an established uptrend, SPY pulls back for 2–4 sessions without breaking the weekly structure, then prints a bullish reversal day.
+
+Exit: Prior high, then trail under the rising swing lows.
+
+Risk: Stop under the pullback low or weekly support.
+
+Works best for: Strong bull markets and slow corrections.
