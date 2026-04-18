@@ -62,6 +62,7 @@ class DataStreamer:
         # VWAP Proxy
         vol = df['Volume'].replace(0, 1)
         df['VWAP_Proxy'] = (tp * vol).rolling(window=20).sum() / vol.rolling(window=20).sum()
+        df['VWAP_Proxy_Dist'] = (df['Close'] / df['VWAP_Proxy']) - 1.0
         
         # Bollinger Bands (20, 2)
         df['BB_Mid'] = df['Close'].rolling(window=20).mean()

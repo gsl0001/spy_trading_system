@@ -80,6 +80,7 @@ def preprocess_data(df_primary, df_mtf, df_vix=None):
     
     tp = (df['High'] + df['Low'] + df['Close']) / 3
     df['VWAP_Proxy'] = (tp * df['Volume'].replace(0, 1)).rolling(window=20).sum() / df['Volume'].replace(0, 1).rolling(window=20).sum()
+    df['VWAP_Proxy_Dist'] = (df['Close'] / df['VWAP_Proxy']) - 1.0
     
     df['DC_20_Upper'] = df['High'].rolling(window=20).max()
     df['DC_20_Lower'] = df['Low'].rolling(window=20).min()
