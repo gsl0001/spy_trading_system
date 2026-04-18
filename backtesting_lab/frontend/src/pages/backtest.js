@@ -162,10 +162,19 @@ export async function renderBacktest(container) {
   document.getElementById('bt-run')?.addEventListener('click', runBacktest);
 }
 
-function updateStrategyInfo(fullName) {
+async function updateStrategyInfo(fullName) {
   const strat = strategies.find(s => s.full_name === fullName);
   const el = document.getElementById('bt-strategy-info');
   if (!el || !strat) return;
+
+  // Check if this strategy is currently running
+  let isLive = false;
+  try {
+    const status = await api.liveStatus();
+    if (status.is_running && status.active_positions) {
+      isLive = status.active_positions.some(p => p.strategy === fullName || p.strategy.includes(strat.name));
+    }
+  } catch (e) {}
 
   const catColors = {
     trend: 'var(--accent-blue)', breakout: 'var(--accent-green)', mean_reversion: 'var(--accent-purple)',
@@ -175,7 +184,10 @@ function updateStrategyInfo(fullName) {
 
   el.innerHTML = `
     <div class="card-header"><span class="card-label">Strategy Info</span></div>
-    <div style="font-weight: 600; font-size: 14px; margin-bottom: 8px;">${strat.name}</div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+      <div style="font-weight: 600; font-size: 14px;">${strat.name}</div>
+      ${isLive ? '<span style="font-size: 9px; padding: 2px 6px; background: var(--accent-green); color: white; border-radius: 4px; font-weight: 800; animation: pulse 2s infinite;">LIVE ACTIVE</span>' : ''}
+    </div>
     <div style="display: flex; gap: 6px; flex-wrap: wrap;">
       <span style="font-size: 10px; padding: 2px 8px; border-radius: var(--radius-full); background: ${catColors[strat.category] || 'var(--bg-elevated)'}20; color: ${catColors[strat.category] || 'var(--text-secondary)'}; border: 1px solid ${catColors[strat.category] || 'var(--border-default)'}30;">${strat.category}</span>
       <span style="font-size: 10px; padding: 2px 8px; border-radius: var(--radius-full); background: var(--bg-elevated); color: var(--text-tertiary);">ID: ${strat.id}</span>

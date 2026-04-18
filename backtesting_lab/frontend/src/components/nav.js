@@ -40,14 +40,18 @@ export function renderNav(container, activePage, onNavigate) {
     </nav>
     <div class="sidebar-status">
       <div class="status-card">
-        <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
           <div class="status-indicator paper" id="nav-status-dot"></div>
           <div>
             <div style="font-size: 12px; font-weight: 600;" id="nav-status-text">Paper Mode</div>
             <div style="font-size: 10px; color: var(--text-tertiary);" id="nav-status-sub">Dry Run Active</div>
           </div>
         </div>
-        <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary);" id="nav-version">v5.0</div>
+        <div id="nav-active-strategy" style="display: none; padding-top: 8px; border-top: 1px solid var(--border-subtle);">
+          <div style="font-size: 9px; text-transform: uppercase; color: var(--text-tertiary); letter-spacing: 0.05em; margin-bottom: 4px;">Active Strategy</div>
+          <div style="font-size: 11px; color: var(--accent-green); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="nav-strat-name">None</div>
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); margin-top: 8px;" id="nav-version">v5.0</div>
       </div>
     </div>
   `;
@@ -66,6 +70,8 @@ export function updateNavStatus(status) {
   const dot = $('#nav-status-dot');
   const text = $('#nav-status-text');
   const sub = $('#nav-status-sub');
+  const stratContainer = $('#nav-active-strategy');
+  const stratName = $('#nav-strat-name');
   if (!dot) return;
 
   dot.className = 'status-indicator';
@@ -73,9 +79,19 @@ export function updateNavStatus(status) {
     dot.classList.add('live');
     text.textContent = status.mode === 'live' ? 'LIVE' : 'Paper Trading';
     sub.textContent = `Running • ${status.trades_executed || 0} trades`;
+    
+    // Highlight strategy
+    if (stratContainer && stratName) {
+      stratContainer.style.display = 'block';
+      const activeStrats = status.active_positions && status.active_positions.length > 0 
+        ? [...new Set(status.active_positions.map(p => p.strategy))].join(', ')
+        : 'Awaiting Signal...';
+      stratName.textContent = activeStrats;
+    }
   } else {
     dot.classList.add(status.dry_run ? 'paper' : 'offline');
     text.textContent = status.dry_run ? 'Paper Mode' : 'Offline';
     sub.textContent = 'Dry Run Active';
+    if (stratContainer) stratContainer.style.display = 'none';
   }
 }
