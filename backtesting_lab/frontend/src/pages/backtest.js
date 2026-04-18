@@ -70,6 +70,7 @@ export async function renderBacktest(container) {
                   <option value="1d" selected>Daily</option>
                   <option value="1h">Hourly</option>
                 </select>
+                <div style="font-size: 9px; color: var(--text-tertiary); margin-top: 4px;">* 1m/5m limited to last 7/60 days.</div>
               </div>
             </div>
 
