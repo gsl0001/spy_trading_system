@@ -108,12 +108,14 @@ from backtesting_lab.server.routers.config import router as config_router
 from backtesting_lab.server.routers.ml import router as ml_router
 from backtesting_lab.server.routers.live import router as live_router
 from backtesting_lab.server.routers.reports import router as reports_router
+from backtesting_lab.server.routers.deployment import router as deployment_router
 
 app.include_router(backtest_router)
 app.include_router(config_router)
 app.include_router(ml_router)
 app.include_router(live_router)
 app.include_router(reports_router)
+app.include_router(deployment_router)
 
 
 # ──────────────────────────────────────────────
