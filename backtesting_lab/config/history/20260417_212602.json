@@ -1,0 +1,132 @@
+{
+  "system": {
+    "name": "SPY QuantOS",
+    "version": "5.0.0",
+    "mode": "paper",
+    "dry_run": true,
+    "log_level": "INFO"
+  },
+  "data": {
+    "ticker": "SPY",
+    "default_interval": "1d",
+    "history_years": 12,
+    "cache_ttl_minutes": 15,
+    "retry_attempts": 3,
+    "retry_delay_seconds": 5,
+    "vix_ticker": "^VIX"
+  },
+  "strategies": {
+    "enabled": [
+      1,
+      2,
+      3,
+      7,
+      8,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37
+    ],
+    "excluded_from_live": [
+      4,
+      5,
+      6,
+      23,
+      24,
+      25,
+      26,
+      27
+    ]
+  },
+  "risk": {
+    "initial_capital": 100000.0,
+    "risk_per_trade_pct": 1.0,
+    "max_daily_loss_pct": 3.0,
+    "max_open_positions": 1,
+    "global_stop_loss_pct": 0.0,
+    "global_take_profit_pct": 0.0,
+    "trailing_stop_pct": 0.0,
+    "max_hold_bars": 0,
+    "cooldown_after_loss_minutes": 30
+  },
+  "ml": {
+    "confidence_threshold": 0.55,
+    "min_trades_for_training": 15,
+    "ensemble_min_trades": 25,
+    "model_save_path": "models/",
+    "auto_retrain": false,
+    "retrain_schedule_hours": 24,
+    "use_ensemble": true
+  },
+  "broker": {
+    "host": "127.0.0.1",
+    "port": 7497,
+    "client_id": 1,
+    "timeout_seconds": 10,
+    "reconnect_attempts": 5,
+    "reconnect_delay_seconds": 30
+  },
+  "schedule": {
+    "market_open": "09:30",
+    "market_close": "16:00",
+    "timezone": "America/New_York",
+    "eval_interval_seconds": 60,
+    "pre_market_start": "09:15"
+  },
+  "options": {
+    "enabled": false,
+    "default_dte": 30,
+    "default_delta": 0.5,
+    "asset_class": "spot"
+  },
+  "notifications": {
+    "enabled": true,
+    "channels": {
+      "discord": {
+        "enabled": true,
+        "webhook_url": ""
+      },
+      "email": {
+        "enabled": false,
+        "smtp_host": "",
+        "smtp_port": 587,
+        "username": "",
+        "password": "",
+        "to_address": ""
+      }
+    },
+    "events": {
+      "trade_entry": true,
+      "trade_exit": true,
+      "daily_summary": true,
+      "error_alert": true,
+      "system_start": true,
+      "system_stop": true
+    }
+  },
+  "reporting": {
+    "trade_journal_path": "data/trade_journal.json",
+    "reports_output_path": "data/reports/",
+    "auto_daily_report": true,
+    "daily_report_time": "16:30"
+  }
+}
