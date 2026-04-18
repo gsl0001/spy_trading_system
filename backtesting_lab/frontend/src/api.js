@@ -43,6 +43,7 @@ async function request(endpoint, options = {}) {
 export const api = {
   // Health
   health: () => request('/api/health'),
+  deploymentCheck: () => request('/api/deployment/check'),
   marketData: () => request('/api/market-data/latest'),
   sparkline: () => request('/api/market-data/sparkline'),
 

@@ -139,6 +139,7 @@ class PerformanceReport(BaseModel):
     total_pnl: float = 0
     total_trades: int = 0
     win_rate: float = 0
+    profit_factor: float = 0
     best_day: float = 0
     worst_day: float = 0
     sharpe: float = 0
