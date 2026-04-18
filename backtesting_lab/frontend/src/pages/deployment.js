@@ -20,6 +20,9 @@ export async function renderDeployment(container) {
       <div class="grid-2" style="gap: var(--space-lg);">
         <!-- Left: Controls -->
         <div>
+          <!-- Readiness Checklist -->
+          <div id="dep-checklist" class="checklist-grid" style="margin-bottom: var(--space-md);"></div>
+
           <!-- Status Card -->
           <div class="card" style="margin-bottom: var(--space-md);">
             <div class="card-header"><span class="card-label">Engine Status</span></div>
@@ -86,7 +89,38 @@ export async function renderDeployment(container) {
   statusInterval = setInterval(refreshStatus, 3000);
 }
 
+let lastCheckResult = { isReady: false };
+
+async function refreshChecklist() {
+  const container = document.getElementById('dep-checklist');
+  if (!container) return;
+
+  try {
+    const result = await api.deploymentCheck();
+    lastCheckResult = result;
+
+    const checks = result.checks || [];
+    container.innerHTML = checks.map(c => {
+      const statusClass = c.status === 'success' ? 'success' : (c.status === 'warning' ? 'warning' : 'error');
+      const statusLabel = c.status === 'success' ? '✓ READY' : (c.status === 'warning' ? '⚠ WARN' : '✖ FAIL');
+
+      return `
+        <div class="check-card ${statusClass}">
+          <div class="check-header">
+            <span>${c.name}</span>
+            <span class="check-status" style="color: var(--accent-${statusClass === 'success' ? 'green' : (statusClass === 'warning' ? 'yellow' : 'red')});">${statusLabel}</span>
+          </div>
+          <div class="check-msg">${c.message}</div>
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    container.innerHTML = `<div class="card error">Failed to load checklist</div>`;
+  }
+}
+
 async function refreshStatus() {
+  await refreshChecklist();
   try {
     const status = await api.liveStatus();
     updateStatusUI(status);
@@ -179,8 +213,10 @@ function updateStatusUI(s) {
   const startLive = document.getElementById('dep-start-live');
   const stopBtn = document.getElementById('dep-stop');
 
-  if (startPaper) startPaper.disabled = s.is_running;
-  if (startLive) startLive.disabled = s.is_running;
+  const canStart = !s.is_running && lastCheckResult.isReady;
+
+  if (startPaper) startPaper.disabled = !canStart;
+  if (startLive) startLive.disabled = !canStart;
   if (stopBtn) stopBtn.disabled = !s.is_running;
 }
 
