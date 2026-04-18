@@ -24,7 +24,9 @@ class IBKRBot:
         self.executor = ExecutionEngine(self.ib)
         
         # Load pre-trained model (if available)
-        self.strategy.load_ai_model("my_0dte_model.pkl")
+        import os
+        model_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'core', 'models', 'my_0dte_model.pkl')
+        self.strategy.load_ai_model(model_path)
         
         # State tracking
         self.in_position = False

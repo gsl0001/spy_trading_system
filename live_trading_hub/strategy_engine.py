@@ -32,7 +32,7 @@ class StrategyEngine:
         prev = df.iloc[-2]
         
         # VWAP Proximity: price within 0.5% of VWAP_Proxy
-        vwap_proximity = abs((latest['Close'] / latest['VWAP_Proxy']) - 1) < 0.005
+        vwap_proximity = abs(latest['VWAP_Proxy_Dist']) < 0.005
         
         # Keltner Squeeze Logic
         sqz_on_prev = (prev['BB_Upper'] < prev['KC_Upper']) and (prev['BB_Lower'] > prev['KC_Lower'])
@@ -71,7 +71,7 @@ class StrategyEngine:
             # Assume any signal generated is blindly trusted for this scaffold if no model is present.
             return 0.90
             
-        feat_vector = df.iloc[-1][['MACD_Hist_Dist', 'CMF', 'VWAP_Proxy']].values.reshape(1, -1)
+        feat_vector = df.iloc[-1][['MACD_Hist_Dist', 'CMF', 'VWAP_Proxy_Dist']].values.reshape(1, -1)
         try:
             prob = self.ai_model.predict_proba(feat_vector)[0][1]
             return prob
