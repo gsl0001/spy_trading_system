@@ -53,6 +53,7 @@ STRATEGY_CATALOG = [
     StrategyInfo(id=35, name="Monetary Policy Pivot", full_name="Strategy 35: Monetary Policy Pivot", category="macro"),
     StrategyInfo(id=36, name="AI Meta-Ensemble", full_name="Strategy 36: AI Meta-Ensemble", category="ai"),
     StrategyInfo(id=37, name="VWAP-Keltner Compression", full_name="Strategy 37: VWAP-Keltner Compression Breakout", category="breakout"),
+    StrategyInfo(id=38, name="Selective Master Orchestrator", full_name="Strategy 38: Selective Master Orchestrator", category="multi"),
 ]
 
 
@@ -128,10 +129,11 @@ async def run_backtest(req: BacktestRequest):
         strategy_name = req.strategy
 
         if "Selective Master" in strategy_name:
-            strategy_options = [s.full_name for s in STRATEGY_CATALOG]
+            strategy_options = [s.full_name for s in STRATEGY_CATALOG if "Orchestrator" not in s.full_name]
             trades_res, equity_res, collisions = engine.run_ai_selective_master(strategy_options)
         elif "Portfolio" in strategy_name:
-            base_strats = [s.full_name for s in STRATEGY_CATALOG if s.id != 36]
+            # Exclude AI Ensemble (36) and Selective Master (38) from equal-weighted portfolio
+            base_strats = [s.full_name for s in STRATEGY_CATALOG if s.id not in [36, 38]]
             res = [engine.run_strategy(s, use_ml=req.use_ml) for s in base_strats]
             trades_res = pd.concat([r[0] for r in res]).sort_values("Date In") if not all(r[0].empty for r in res) else pd.DataFrame()
             equity_res = pd.concat([r[1] for r in res], axis=1).mean(axis=1)
