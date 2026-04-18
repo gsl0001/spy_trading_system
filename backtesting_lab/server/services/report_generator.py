@@ -71,6 +71,10 @@ class ReportGenerator:
         total_pnl = sum(t.get("pnl", 0) for t in trades)
         win_rate = len(wins) / len(trades) * 100 if trades else 0
 
+        gross_profit = sum(t.get("pnl", 0) for t in wins)
+        gross_loss = abs(sum(t.get("pnl", 0) for t in losses))
+        profit_factor = gross_profit / gross_loss if gross_loss > 0 else (gross_profit if gross_profit > 0 else 0)
+
         # Daily returns aggregation
         daily_pnl = {}
         for t in trades:
@@ -113,6 +117,7 @@ class ReportGenerator:
             "total_trades": len(trades),
             "total_pnl": round(total_pnl, 2),
             "win_rate": round(win_rate, 1),
+            "profit_factor": round(float(profit_factor), 2),
             "best_day": round(best_day, 2),
             "worst_day": round(worst_day, 2),
             "sharpe": round(float(sharpe), 2),

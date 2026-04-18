@@ -35,7 +35,7 @@ export async function renderDashboard(container) {
       </div>
 
       <!-- KPI Grid -->
-      <div class="grid-5" id="dash-kpis"></div>
+      <div class="grid-4" id="dash-kpis"></div>
 
       <!-- Charts Row -->
       <div class="section-label">System Performance</div>
@@ -121,12 +121,23 @@ async function loadDashboardData() {
     // KPIs
     const kpiEl = document.getElementById('dash-kpis');
     if (kpiEl) {
+      const confidence = (ml.confidence_threshold || 0.75) * 100;
+      const confColor = confidence >= 80 ? 'var(--accent-green)' : (confidence >= 60 ? 'var(--accent-yellow)' : 'var(--accent-red)');
+
       renderMetrics(kpiEl, [
-        { label: 'Total Return', value: perf.total_pnl || 0, format: 'pnl', icon: '💰' },
+        { label: 'Net P&L', value: perf.total_pnl || 0, format: 'pnl', icon: '💰' },
         { label: 'Win Rate', value: perf.win_rate || 0, format: 'pct', color: 'var(--text-primary)', icon: '🎯' },
-        { label: 'Sharpe Ratio', value: perf.sharpe || 0, format: 'ratio', color: 'var(--accent-blue)', icon: '📊' },
-        { label: 'Total Trades', value: perf.total_trades || 0, format: 'number', color: 'var(--text-primary)', icon: '📝' },
-        { label: 'Best Day', value: perf.best_day || 0, format: 'pnl', icon: '⭐' },
+        { label: 'Profit Factor', value: perf.profit_factor || 0, format: 'ratio', color: 'var(--accent-blue)', icon: '📈' },
+        { 
+          label: 'AI Confidence', 
+          value: confidence, 
+          format: 'pct', 
+          color: confColor, 
+          icon: '🤖',
+          sublabel: `<div style="height: 4px; width: 100%; background: var(--bg-elevated); border-radius: 2px; margin-top: 8px; overflow: hidden;">
+                       <div style="height: 100%; width: ${confidence}%; background: ${confColor}; transition: width 0.5s ease-out;"></div>
+                     </div>`
+        },
       ]);
     }
 
@@ -143,6 +154,9 @@ async function loadDashboardData() {
     // ML Status
     const mlEl = document.getElementById('dash-ml-status');
     if (mlEl) {
+      const confidence = (ml.confidence_threshold || 0.75) * 100;
+      const confColor = confidence >= 80 ? 'var(--accent-green)' : (confidence >= 60 ? 'var(--accent-yellow)' : 'var(--accent-red)');
+
       mlEl.innerHTML = `
         <div style="display: flex; flex-direction: column; gap: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -158,14 +172,20 @@ async function loadDashboardData() {
             </span>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 12px; color: var(--text-secondary);">Confidence</span>
-            <span style="font-family: var(--font-mono); font-size: 13px; font-weight: 600;">
-              ${formatPct(ml.confidence_threshold * 100 || 55)}
-            </span>
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 12px; color: var(--text-secondary);">Features</span>
             <span style="font-family: var(--font-mono); font-size: 13px;">${ml.feature_count || 0}</span>
+          </div>
+          
+          <div style="margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--bg-elevated);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 12px; color: var(--text-secondary);">Confidence Meter</span>
+              <span style="font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: ${confColor};">
+                ${formatPct(confidence)}
+              </span>
+            </div>
+            <div style="height: 8px; width: 100%; background: var(--bg-elevated); border-radius: 4px; overflow: hidden;">
+              <div style="height: 100%; width: ${confidence}%; background: ${confColor}; transition: width 0.5s ease-out;"></div>
+            </div>
           </div>
         </div>
       `;
