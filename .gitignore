@@ -25,3 +25,4 @@ build/
 env/
 venv/
 myenv/
+.worktrees/
