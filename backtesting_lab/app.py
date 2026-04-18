@@ -279,6 +279,33 @@ if trade_mode == "Options (Calls/Puts)":
     engine_kwargs["target_dte"] = target_dte
     engine_kwargs["target_delta"] = target_delta
 
+# 0DTE Live Training
+st.sidebar.markdown("<p style='font-size: 10px; font-weight: 800; color: #4b5563; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; padding-left: 4px;'>0DTE Live Training</p>", unsafe_allow_html=True)
+
+if st.sidebar.button("Train 0DTE Live Model (1m)"):
+    with st.spinner("Fetching 1m SPY data (last 7 days)..."):
+        try:
+            # Fetch 7 days of 1m data
+            d_p_1m, d_m_1m, d_v_1m = fetch_spy_data(interval="1m", years=0)
+            df_1m = preprocess_data(d_p_1m, d_m_1m, d_v_1m)
+            
+            # Setup engine
+            temp_engine_1m = BacktestEngine(df_1m, initial_capital=capital, risk_pc=risk_pc, global_stop_loss=g_sl, global_take_profit=g_tp, trailing_stop=g_ts, max_hold_bars=g_hold)
+            
+            # Run VWAP Breakout Strategy (Strategy 37)
+            trades_1m, _ = temp_engine_1m.run_strategy("Strategy 37")
+            
+            # Train specialized 0DTE model
+            success, msg = st.session_state.ml_filter.train_0dte(df_1m, trades_1m)
+            if success:
+                st.sidebar.success(msg)
+            else:
+                st.sidebar.warning(msg)
+        except Exception as e:
+            st.sidebar.error(f"0DTE Training Error: {e}")
+            
+st.sidebar.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+
 if st.sidebar.button("Retrain AI Model"):
     with st.spinner("Analyzing Market Patterns..."):
         temp_engine = EngineClass(df_all, **engine_kwargs)
