@@ -1,78 +1,75 @@
 """
 QuantOS Trading System - Unified Launcher
-Run this script to start the FastAPI backend, the Live Trading Bot, and automatically open the UI.
+-----------------------------------------
+1. Backtest Lab (Streamlit Research Workstation)
+2. Live Trading Hub (0DTE IBKR Deployment)
 """
 
 import sys
 import os
 import subprocess
-import threading
-import time
 import webbrowser
-import logging
+import time
+import threading
+from pathlib import Path
 
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+# Add project root to path
+PROJECT_ROOT = Path(__file__).parent.absolute()
 os.chdir(PROJECT_ROOT)
 
-def run_server():
-    """Runs the FastAPI server."""
-    print("[SYSTEM] Starting QuantOS Server on http://127.0.0.1:8000 ...")
-    import uvicorn
-    uvicorn.run(
-        "server.main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=False,
-        log_level="warning",
-    )
+def open_browser(url, delay=2):
+    """Open the browser after a short delay."""
+    time.sleep(delay)
+    print(f"[SYSTEM] Opening UI at {url}...")
+    webbrowser.open(url)
 
-def run_ibkr_bot():
-    """Runs the IBKR live trading bot."""
-    bot_path = os.path.join(PROJECT_ROOT, "live_0dte_system", "main.py")
-    if os.path.exists(bot_path):
-        print(f"[SYSTEM] Starting IBKR Live Trading Bot from {bot_path} ...")
-        # Run bot in a subprocess so its output interleaves in the main console
-        try:
-            subprocess.run([sys.executable, bot_path], cwd=os.path.join(PROJECT_ROOT, "live_0dte_system"))
-        except KeyboardInterrupt:
-            pass
-    else:
-        print("[WARNING] IBKR bot script not found.")
+def run_backtest_lab():
+    """Launch the Streamlit research workstation."""
+    print("\n[SYSTEM] Launching Backtest Lab...")
+    script_path = os.path.join(PROJECT_ROOT, "scripts", "backtest_lab.py")
+    
+    # Start browser in a separate thread
+    threading.Thread(target=open_browser, args=("http://localhost:8501",), daemon=True).start()
+    
+    subprocess.run([sys.executable, script_path])
 
-def open_ui():
-    """Waits for the server to spin up and opens the browser."""
-    # Wait a few seconds to ensure the server is ready to accept connections
-    time.sleep(3)
-    target_url = "http://127.0.0.1:8000/ui"
-    print(f"[SYSTEM] Opening UI in default browser: {target_url}")
-    webbrowser.open(target_url)
+def run_live_trading_hub():
+    """Launch the Unified Live Trading Server & UI."""
+    print("\n[SYSTEM] Launching Live Trading Hub (FastAPI + React)...")
+    
+    # We use the backtesting_lab/server/main.py as the unified server
+    # Or we can run it via uvicorn directly
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(PROJECT_ROOT) + os.pathsep + env.get("PYTHONPATH", "")
+    
+    # Start browser in a separate thread
+    threading.Thread(target=open_browser, args=("http://localhost:8000/ui", 3), daemon=True).start()
+    
+    cmd = [
+        sys.executable, "-m", "uvicorn", 
+        "backtesting_lab.server.main:app", 
+        "--host", "0.0.0.0", 
+        "--port", "8000"
+    ]
+    subprocess.run(cmd, env=env)
 
 if __name__ == "__main__":
-    print("=====================================================")
-    print("             SPY QUANT OS INITIALIZING               ")
-    print("=====================================================")
+    print("\n" + "="*50)
+    print("             QUANT OS UNIFIED CONTROLLER             ")
+    print("="*50)
+    print(" [1] Launch Backtest Lab (Research & Retraining)")
+    print(" [2] Launch Live Trading Hub (Unified UI & Bot)")
+    print(" [Q] Exit")
+    print("-" * 50)
     
-    # Thread 1: Start UI Browser
-    ui_thread = threading.Thread(target=open_ui, daemon=True)
-    ui_thread.start()
-
-    # Thread 2: Start Backend Server
-    server_thread = threading.Thread(target=run_server, daemon=True)
-    server_thread.start()
-
-    # Main Thread: Run IBKR Bot
-    # (By running this in the main thread, Ctrl+C will easily kill it)
-    try:
-        # Give server a tiny headstart
-        time.sleep(1)
-        run_ibkr_bot()
-        
-        # If the bot exits (e.g. no IBKR connection), keep server alive if needed
-        print("[SYSTEM] Trading Bot process ended. Server is still running.")
-        print("[SYSTEM] Press Ctrl+C to stop the entire system.")
-        while True:
-            time.sleep(1)
-            
-    except KeyboardInterrupt:
-        print("\n[SYSTEM] Shutting down QuantOS Unified Launcher...")
+    choice = input("\nSelect system to start (1/2/Q): ").strip().upper()
+    
+    if choice == '1':
+        run_backtest_lab()
+    elif choice == '2':
+        run_live_trading_hub()
+    elif choice == 'Q':
+        print("\nExiting QuantOS Controller.")
         sys.exit(0)
+    else:
+        print("\n[ERROR] Invalid choice. Please restart and select 1, 2, or Q.")

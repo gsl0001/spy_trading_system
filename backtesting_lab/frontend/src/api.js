@@ -44,6 +44,7 @@ export const api = {
   // Health
   health: () => request('/api/health'),
   marketData: () => request('/api/market-data/latest'),
+  sparkline: () => request('/api/market-data/sparkline'),
 
   // Backtest
   strategies: () => request('/api/backtest/strategies'),
@@ -65,7 +66,9 @@ export const api = {
   startTrading: (params) => request('/api/live/start', { method: 'POST', body: params }),
   stopTrading: () => request('/api/live/stop', { method: 'POST' }),
   liveStatus: () => request('/api/live/status'),
+  account: () => request('/api/live/account'),
   positions: () => request('/api/live/positions'),
+  orders: () => request('/api/live/orders'),
   emergencyStop: () => request('/api/live/emergency-stop', { method: 'POST' }),
 
   // Reports

@@ -1,0 +1,50 @@
+<h2>UI Streamlining & Deployment Instructions</h2>
+<p class="subtitle">Choose the direction for making QuantOS more intuitive</p>
+
+<div class="options" data-choice="approach">
+  <div class="option" data-choice="wizard" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>The Guided Wizard</h3>
+      <p>A step-by-step "Pre-flight Checklist" that locks the "Start" buttons until system requirements (IBKR, Config, ML Models) are verified.</p>
+      <div class="mockup" style="margin-top: 10px; font-size: 11px;">
+        <div style="border: 1px solid var(--border-subtle); padding: 8px; border-radius: 4px;">
+          <div style="color: var(--accent-green);">✓ IBKR Gateway Connected</div>
+          <div style="color: var(--accent-green);">✓ ML Ensemble Model Loaded</div>
+          <div style="color: var(--accent-yellow);">! Dry Run Enabled (Config)</div>
+          <button class="mock-button" style="margin-top: 5px; width: 100%; opacity: 0.5;">Start Trading Hub</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="infobar" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>The Integrated Guide</h3>
+      <p>Persistent "Help & Instructions" panels on every page that explain what you're seeing and provide "How to Deploy" docs directly in the UI.</p>
+      <div class="mockup" style="margin-top: 10px; font-size: 11px;">
+        <div style="display: flex; gap: 5px;">
+          <div style="flex: 2; border: 1px dashed var(--border-subtle); height: 40px; display: flex; align-items: center; justify-content: center;">Main UI</div>
+          <div style="flex: 1; background: var(--bg-elevated); padding: 5px; border-radius: 4px;">
+            <b style="color: var(--accent-blue);">Deployment Tip:</b>
+            Ensure TWS is running on port 7497...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="command" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>The Command Console</h3>
+      <p>Consolidating "Deployment" and "Dashboard" into a single high-fidelity terminal view that prioritizes system health and deployment status over historical charts.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Clarifying Question:</h3>
+  <p>For the "Deployment Instructions," would you prefer they be **active checks** (the UI checks if the system is ready) or **static documentation** (a "How-To" text section within the UI)?</p>
+</div>

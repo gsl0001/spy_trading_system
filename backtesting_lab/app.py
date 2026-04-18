@@ -161,6 +161,13 @@ st.sidebar.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
+# System Mode Selector
+system_mode = st.sidebar.selectbox("System Module", ["Backtest Lab", "Live Deployment Hub"], index=0)
+
+if system_mode == "Live Deployment Hub":
+    st.sidebar.warning("Note: The Live Hub must be launched via 'python scripts/live_hub.py' or Option 2 in start.py for real-time execution.")
+    st.sidebar.info("Use this view to analyze live AI metrics once the hub is active.")
+
 # Sophisticated Market Status
 is_live = datetime.datetime.now().hour >= 9 and datetime.datetime.now().hour < 16
 status_color = "#34C759" if is_live else "#FF3B30"

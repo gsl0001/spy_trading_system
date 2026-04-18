@@ -188,6 +188,21 @@ async def get_latest_market_data():
         return {"error": str(e)}
 
 
+@app.get("/api/market-data/sparkline")
+async def get_spy_sparkline():
+    """Get the last 30 minutes of 1m price data for SPY sparkline."""
+    try:
+        from core.data import fetch_spy_data
+        d_p, _, _ = fetch_spy_data(interval="1m", years=0) # fetch_spy_data with years=0 likely fetches most recent
+        if d_p.empty:
+            return {"data": []}
+        
+        last_30 = d_p.tail(30)['Close'].tolist()
+        return {"data": [round(x, 2) for x in last_30]}
+    except Exception as e:
+        return {"error": str(e)}
+
+
 from fastapi.responses import RedirectResponse
 
 # ──────────────────────────────────────────────

@@ -1,0 +1,62 @@
+<h2>Design: The Guided Wizard (Active Checks)</h2>
+<p class="subtitle">Ensuring system readiness through a pre-flight checklist</p>
+
+<div class="section">
+  <h3>1. Deployment "Pre-flight" Checklist</h3>
+  <p>Instead of just Start/Stop buttons, the Deployment page will lead with a status grid that polls the backend for these specific requirements:</p>
+  
+  <div class="mockup" style="padding: 20px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      <div class="card" style="border-left: 4px solid var(--accent-green);">
+        <div style="display: flex; justify-content: space-between;">
+          <b>IBKR Connectivity</b>
+          <span style="color: var(--accent-green);">● ONLINE</span>
+        </div>
+        <p style="font-size: 11px; color: var(--text-tertiary);">API Port 7497 detected.</p>
+      </div>
+      <div class="card" style="border-left: 4px solid var(--accent-green);">
+        <div style="display: flex; justify-content: space-between;">
+          <b>ML Ensemble</b>
+          <span style="color: var(--accent-green);">● LOADED</span>
+        </div>
+        <p style="font-size: 11px; color: var(--text-tertiary);">v5.0.2 model active.</p>
+      </div>
+      <div class="card" style="border-left: 4px solid var(--accent-red);">
+        <div style="display: flex; justify-content: space-between;">
+          <b>Market Data</b>
+          <span style="color: var(--accent-red);">○ STALE</span>
+        </div>
+        <p style="font-size: 11px; color: var(--text-tertiary);">Last quote > 60s ago.</p>
+      </div>
+      <div class="card" style="border-left: 4px solid var(--accent-yellow);">
+        <div style="display: flex; justify-content: space-between;">
+          <b>Strategy Config</b>
+          <span style="color: var(--accent-yellow);">! REVIEW</span>
+        </div>
+        <p style="font-size: 11px; color: var(--text-tertiary);">37/37 active (Aggressive).</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>2. Contextual Instruction Tooltips</h3>
+  <p>Every status check will have a "How to fix" hint. For example, if IBKR is offline, a tooltip will explain:</p>
+  <div class="mockup" style="background: var(--bg-elevated); padding: 12px; border-radius: 8px; border: 1px solid var(--accent-blue);">
+    <h4 style="color: var(--accent-blue); margin-bottom: 8px;">Deployment Help: IBKR Offline</h4>
+    <ol style="font-size: 12px; padding-left: 20px;">
+      <li>Open IB Gateway or TWS.</li>
+      <li>Go to Settings > API > Precautions.</li>
+      <li>Ensure "Bypass Order Precautions" is checked.</li>
+      <li>Verify port 7497 matches <code>config.yaml</code>.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="section">
+  <h3>3. Streamlined Dashboard</h3>
+  <p>The main Dashboard will be simplified to focus on "Decision Alpha" — showing exactly <i>why</i> the AI is or isn't trading right now, using a confidence meter.</p>
+</div>
+
+<h3>Does this design for the "Pre-flight Checklist" and Tooltips look right?</h3>
+<p class="subtitle">If approved, I'll start implementing these active checks in <code>deployment.js</code> and the backend.</p>

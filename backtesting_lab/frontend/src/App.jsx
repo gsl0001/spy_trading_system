@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { api } from './api';
 import { 
   LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell, ComposedChart
@@ -14,48 +15,6 @@ import { twMerge } from 'tailwind-merge';
 function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
-
-// Mock Data
-const equityData = [
-  { time: '09:30', value: 100000 },
-  { time: '10:00', value: 101200 },
-  { time: '10:30', value: 100800 },
-  { time: '11:00', value: 102500 },
-  { time: '11:30', value: 103100 },
-  { time: '12:00', value: 102900 },
-  { time: '12:30', value: 104500 },
-  { time: '13:00', value: 105800 },
-  { time: '13:30', value: 105200 },
-  { time: '14:00', value: 106900 },
-  { time: '14:30', value: 108200 },
-  { time: '15:00', value: 107500 },
-  { time: '15:30', value: 109000 },
-  { time: '16:00', value: 110450 },
-];
-
-const priceData = [
-  { time: '10:00', open: 512.4, high: 513.8, low: 511.9, close: 513.2, volume: 1200000 },
-  { time: '11:00', open: 513.2, high: 515.1, low: 512.8, close: 514.7, volume: 1500000 },
-  { time: '12:00', open: 514.7, high: 514.9, low: 513.5, close: 513.8, volume: 900000 },
-  { time: '13:00', open: 513.8, high: 516.4, low: 513.2, close: 515.9, volume: 2100000 },
-  { time: '14:00', open: 515.9, high: 517.8, low: 515.5, close: 517.2, volume: 1800000 },
-  { time: '15:00', open: 517.2, high: 518.5, low: 516.8, close: 518.1, volume: 2500000 },
-];
-
-const strategyRankings = [
-  { name: 'Strategy 36: AI Meta-Ensemble', return: '+24.5%', winRate: '68%', sharpe: '2.8' },
-  { name: 'Strategy 11: Combo Alpha', return: '+18.2%', winRate: '62%', sharpe: '2.1' },
-  { name: 'Strategy 10: Insider Alpha', return: '+15.9%', winRate: '58%', sharpe: '1.9' },
-  { name: 'Strategy 1: 20/50 Pullback', return: '+12.4%', winRate: '55%', sharpe: '1.5' },
-  { name: 'Strategy 3: Mean Reversion', return: '+9.8%', winRate: '52%', sharpe: '1.2' },
-];
-
-const tickers = [
-  { symbol: 'SPY', name: 'S&P 500 ETF', price: '518.24', change: '+1.45%', data: [10, 15, 12, 18, 25, 22, 30] },
-  { symbol: 'QQQ', name: 'Nasdaq 100 ETF', price: '442.10', change: '+2.10%', data: [5, 12, 18, 15, 22, 28, 35] },
-  { symbol: 'DIA', name: 'Dow Jones ETF', price: '389.50', change: '+0.85%', data: [20, 18, 22, 20, 25, 24, 28] },
-  { symbol: 'IWM', name: 'Russell 2000 ETF', price: '204.30', change: '-0.32%', data: [30, 25, 28, 22, 20, 18, 15] },
-];
 
 const SidebarItem = ({ icon: Icon, label, active = false }) => (
   <div className={cn(
@@ -82,7 +41,7 @@ const MetricCard = ({ label, value, delta, isPositive = true }) => (
   </div>
 );
 
-const MiniTicker = ({ ticker }) => (
+const MiniTicker = ({ ticker, sparkline }) => (
   <div className="bg-[#161a23] border border-gray-800 p-4 rounded-xl relative overflow-hidden group hover:border-emerald-500/30 transition-all">
     <div className="flex justify-between items-start mb-2">
       <div>
@@ -96,7 +55,7 @@ const MiniTicker = ({ ticker }) => (
     <div className="text-lg font-bold text-white mb-4">${ticker.price}</div>
     <div className="absolute bottom-0 left-0 right-0 h-12 opacity-30 group-hover:opacity-50 transition-opacity">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={ticker.data.map((v, i) => ({ v, i }))}>
+        <LineChart data={(sparkline || []).map((v, i) => ({ v, i }))}>
           <Line 
             type="monotone" 
             dataKey="v" 
@@ -112,6 +71,42 @@ const MiniTicker = ({ ticker }) => (
 
 export default function App() {
   const [activeStrategy, setActiveStrategy] = useState("AI Meta-Ensemble");
+  const [marketData, setMarketData] = useState(null);
+  const [sparkline, setSparkline] = useState([]);
+  const [account, setAccount] = useState({});
+  const [positions, setPositions] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [status, setStatus] = useState({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const mData = await api.marketData();
+        setMarketData(mData);
+
+        const spark = await api.sparkline();
+        if (spark.data) setSparkline(spark.data);
+
+        const acc = await api.account();
+        if (!acc.error) setAccount(acc);
+
+        const pos = await api.positions();
+        if (pos.positions) setPositions(pos.positions);
+
+        const ord = await api.orders();
+        if (ord.orders) setOrders(ord.orders);
+
+        const stat = await api.liveStatus();
+        setStatus(stat);
+      } catch (e) {
+        console.error("Fetch error:", e);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 10000); // Update every 10s
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="flex h-screen w-full bg-[#0b0e14] text-gray-200 overflow-hidden">
@@ -121,7 +116,7 @@ export default function App() {
           <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
             <Zap className="text-white fill-current" size={24} />
           </div>
-          <h1 className="text-xl font-bold text-white tracking-tight">FinX <span className="text-emerald-500">Quant</span></h1>
+          <h1 className="text-xl font-bold text-white tracking-tight">Quant<span className="text-emerald-500">OS</span></h1>
         </div>
 
         <nav className="flex-1 space-y-2 overflow-y-auto no-scrollbar">
@@ -136,8 +131,8 @@ export default function App() {
             <div className="space-y-4">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-400 flex items-center gap-2"><BrainCircuit size={14}/> ML Filter</span>
-                <div className="w-8 h-4 bg-emerald-500 rounded-full relative cursor-pointer">
-                  <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full" />
+                <div className={cn("w-8 h-4 rounded-full relative cursor-pointer", status.is_running ? "bg-emerald-500" : "bg-gray-700")}>
+                  <div className={cn("absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all", status.is_running ? "right-0.5" : "left-0.5")} />
                 </div>
               </div>
               <div className="space-y-2">
@@ -153,10 +148,12 @@ export default function App() {
           </div>
 
           <div className="px-4 mt-6">
-            <h4 className="text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-4">Market Status</h4>
-            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-3 flex items-center gap-3">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Market Open: LIVE</span>
+            <h4 className="text-[10px] uppercase text-gray-500 font-bold tracking-widest mb-4">System Status</h4>
+            <div className={cn("border rounded-lg p-3 flex items-center gap-3", status.is_running ? "bg-emerald-500/5 border-emerald-500/20" : "bg-red-500/5 border-red-500/20")}>
+              <div className={cn("w-2 h-2 rounded-full animate-pulse", status.is_running ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]")} />
+              <span className={cn("text-[10px] font-bold uppercase tracking-wider", status.is_running ? "text-emerald-400" : "text-red-400")}>
+                {status.is_running ? "Live Execution: Active" : "System: Standby"}
+              </span>
             </div>
           </div>
         </nav>
@@ -172,11 +169,11 @@ export default function App() {
         {/* Header */}
         <header className="h-20 border-b border-gray-800 flex items-center justify-between px-8 shrink-0">
           <div className="flex items-center gap-4">
-            <h2 className="text-xl font-bold text-white">Workstation Dashboard</h2>
+            <h2 className="text-xl font-bold text-white">Institutional Workstation</h2>
             <div className="flex items-center gap-2 bg-gray-900 border border-gray-800 px-3 py-1.5 rounded-lg text-xs">
-              <span className="text-gray-500">Interval:</span>
-              <span className="text-white font-medium">15m</span>
-              <ChevronDown size={14} className="text-gray-500" />
+              <span className="text-gray-500">Mode:</span>
+              <span className="text-white font-medium capitalize">{status.mode || 'Offline'}</span>
+              <ShieldCheck size={14} className={status.dry_run ? "text-orange-400" : "text-emerald-400"} title={status.dry_run ? "Dry Run" : "Live Trading"} />
             </div>
           </div>
 
@@ -195,8 +192,8 @@ export default function App() {
             </div>
             <div className="flex items-center gap-3 border-l border-gray-800 pl-6 cursor-pointer group">
               <div className="text-right">
-                <p className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">John Doe</p>
-                <p className="text-[10px] text-gray-500 font-medium">Pro Trader</p>
+                <p className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">Quant Trader</p>
+                <p className="text-[10px] text-gray-500 font-medium">Session Active</p>
               </div>
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-500 to-cyan-500 border-2 border-gray-800" />
             </div>
@@ -207,161 +204,139 @@ export default function App() {
         <div className="flex-1 overflow-y-auto p-8 no-scrollbar space-y-8">
           {/* Performance Overview Bar */}
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-            <MetricCard label="Total Equity" value="$110,450.22" delta="+10.45%" />
-            <MetricCard label="Profit Factor" value="2.84" delta="Excellent" />
-            <MetricCard label="Win Rate" value="68.2%" delta="+2.1%" />
-            <MetricCard label="Max Drawdown" value="4.12%" delta="Safe" isPositive={true} />
-            <MetricCard label="Sharpe Ratio" value="3.15" delta="Top 1%" />
+            <MetricCard label="Net Liquidation" value={`$${parseFloat(account.NetLiquidation || 0).toLocaleString()}`} delta="Account Equity" />
+            <MetricCard label="Buying Power" value={`$${parseFloat(account.BuyingPower || 0).toLocaleString()}`} delta="Available" />
+            <MetricCard label="Daily PnL" value={`$${status.daily_pnl || 0}`} delta={status.daily_pnl >= 0 ? "+$0" : "-$0"} isPositive={status.daily_pnl >= 0} />
+            <MetricCard label="Margin Req" value={`$${parseFloat(account.InitMarginReq || 0).toLocaleString()}`} delta="Initial" isPositive={false} />
+            <MetricCard label="Excess Liq" value={`$${parseFloat(account.ExcessLiquidity || 0).toLocaleString()}`} delta="Safety Buffer" />
           </div>
 
           <div className="grid grid-cols-12 gap-8">
-            {/* Main Equity Chart */}
             <div className="col-span-12 lg:col-span-8 space-y-8">
-              <div className="bg-[#161a23] border border-gray-800 rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-8">
-                  <div>
-                    <h3 className="text-lg font-bold text-white mb-1">Equity Performance Curve</h3>
-                    <p className="text-xs text-gray-500">Live account synchronization active</p>
-                  </div>
-                  <div className="flex bg-[#0b0e14] p-1 rounded-lg border border-gray-800">
-                    {['1D', '1W', '1M', '3M', '1Y'].map((t) => (
-                      <button 
-                        key={t} 
-                        className={cn(
-                          "px-3 py-1.5 rounded-md text-[10px] font-bold transition-all",
-                          t === '1D' ? "bg-emerald-500 text-white shadow-lg" : "text-gray-500 hover:text-white"
-                        )}
-                      >
-                        {t}
-                      </button>
-                    ))}
+              {/* Live Positions Table */}
+              <div className="bg-[#161a23] border border-gray-800 rounded-2xl overflow-hidden">
+                <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+                  <h3 className="text-md font-bold text-white">Live IBKR Positions</h3>
+                  <div className="flex gap-2">
+                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20">{positions.length} Active</span>
                   </div>
                 </div>
-                <div className="h-[350px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={equityData}>
-                      <defs>
-                        <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#00ff88" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#00ff88" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#22262e" />
-                      <XAxis 
-                        dataKey="time" 
-                        stroke="#4b5563" 
-                        fontSize={10} 
-                        tickLine={false} 
-                        axisLine={false} 
-                        dy={10}
-                      />
-                      <YAxis 
-                        stroke="#4b5563" 
-                        fontSize={10} 
-                        tickLine={false} 
-                        axisLine={false} 
-                        tickFormatter={(v) => `$${v/1000}k`}
-                      />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#161a23', border: '1px solid #374151', borderRadius: '12px' }}
-                        itemStyle={{ color: '#00ff88' }}
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="value" 
-                        stroke="#00ff88" 
-                        strokeWidth={3} 
-                        fillOpacity={1} 
-                        fill="url(#colorValue)" 
-                        animationDuration={2000}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                <div className="p-0 overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="text-[10px] uppercase text-gray-500 bg-[#0b0e14]/50">
+                      <tr>
+                        <th className="px-6 py-4 font-bold">Symbol</th>
+                        <th className="px-6 py-4 font-bold">Type</th>
+                        <th className="px-6 py-4 font-bold text-right">Size</th>
+                        <th className="px-6 py-4 font-bold text-right">Avg Cost</th>
+                        <th className="px-6 py-4 font-bold text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800">
+                      {positions.length > 0 ? positions.map((p, i) => (
+                        <tr key={i} className="hover:bg-gray-800/30 transition-colors group">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-white">{p.symbol}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-gray-400 text-xs">{p.secType}</td>
+                          <td className={cn("px-6 py-4 text-right font-mono", p.position > 0 ? "text-emerald-400" : "text-red-400")}>
+                            {p.position}
+                          </td>
+                          <td className="px-6 py-4 text-right font-mono text-gray-300">${parseFloat(p.avgCost).toFixed(2)}</td>
+                          <td className="px-6 py-4 text-right">
+                             <button className="text-[10px] text-red-400 font-bold hover:bg-red-500/10 px-2 py-1 rounded border border-red-500/20 opacity-0 group-hover:opacity-100 transition-all">CLOSE</button>
+                          </td>
+                        </tr>
+                      )) : (
+                        <tr><td colSpan="5" className="px-6 py-10 text-center text-gray-500 text-xs italic">No active positions detected in IBKR</td></tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
-              {/* Secondary Chart: Price / Volume */}
-              <div className="bg-[#161a23] border border-gray-800 rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center border border-white/10">
-                      <img src="https://img.icons8.com/color/48/us-dollar-exchange.png" className="w-8 h-8" alt="SPY" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        SPY <span className="text-xs font-normal text-gray-500 tracking-normal">S&P 500 ETF Trust</span>
-                      </h3>
-                      <p className="text-2xl font-mono text-white">$518.24 <span className="text-sm text-emerald-400 ml-2">+1.45%</span></p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button className="p-2 bg-gray-900 border border-gray-800 rounded-lg hover:border-emerald-500 transition-colors">
-                      <Settings size={18} className="text-gray-400" />
-                    </button>
-                    <button className="p-2 bg-gray-900 border border-gray-800 rounded-lg hover:border-emerald-500 transition-colors">
-                      <Filter size={18} className="text-gray-400" />
-                    </button>
-                  </div>
+              {/* Active Orders Table */}
+              <div className="bg-[#161a23] border border-gray-800 rounded-2xl overflow-hidden">
+                <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+                  <h3 className="text-md font-bold text-white">Order Management</h3>
+                  <Activity size={16} className="text-emerald-500" />
                 </div>
-                <div className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={priceData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#22262e" />
-                      <XAxis dataKey="time" stroke="#4b5563" fontSize={10} tickLine={false} axisLine={false} />
-                      <YAxis stroke="#4b5563" fontSize={10} tickLine={false} axisLine={false} domain={['auto', 'auto']} />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#161a23', border: '1px solid #374151', borderRadius: '12px' }}
-                      />
-                      <Bar dataKey="volume" yAxisId={0} fill="#374151" opacity={0.3} barSize={40} />
-                      <Line 
-                        type="monotone" 
-                        dataKey="close" 
-                        stroke="#00ff88" 
-                        strokeWidth={2} 
-                        dot={{ r: 4, fill: '#00ff88', strokeWidth: 0 }} 
-                        activeDot={{ r: 6, stroke: '#161a23', strokeWidth: 2 }}
-                      />
-                    </ComposedChart>
-                  </ResponsiveContainer>
+                <div className="p-0 overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="text-[10px] uppercase text-gray-500 bg-[#0b0e14]/50">
+                      <tr>
+                        <th className="px-6 py-4 font-bold">Order ID</th>
+                        <th className="px-6 py-4 font-bold">Symbol</th>
+                        <th className="px-6 py-4 font-bold">Action</th>
+                        <th className="px-6 py-4 font-bold text-right">Qty</th>
+                        <th className="px-6 py-4 font-bold">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800">
+                      {orders.length > 0 ? orders.map((o, i) => (
+                        <tr key={i} className="hover:bg-gray-800/30 transition-colors">
+                          <td className="px-6 py-4 font-mono text-xs text-gray-500">#{o.orderId}</td>
+                          <td className="px-6 py-4 font-bold text-white">{o.symbol}</td>
+                          <td className={cn("px-6 py-4 text-xs font-bold", o.action === "BUY" ? "text-emerald-400" : "text-red-400")}>{o.action}</td>
+                          <td className="px-6 py-4 text-right font-mono">{o.filled}/{o.totalQuantity}</td>
+                          <td className="px-6 py-4">
+                            <span className={cn(
+                              "text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider",
+                              o.status === "Filled" ? "bg-emerald-500/10 text-emerald-400" : "bg-blue-500/10 text-blue-400"
+                            )}>
+                              {o.status}
+                            </span>
+                          </td>
+                        </tr>
+                      )) : (
+                        <tr><td colSpan="5" className="px-6 py-10 text-center text-gray-500 text-xs italic">No active orders in the queue</td></tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
 
             {/* Sidebar Widgets */}
             <div className="col-span-12 lg:col-span-4 space-y-8">
-              {/* Tickers */}
-              <div className="grid grid-cols-2 gap-4">
-                {tickers.map((t) => <MiniTicker key={t.symbol} ticker={t} />)}
+              {/* Main SPY Ticker */}
+              <div className="space-y-4">
+                <MiniTicker ticker={{
+                  symbol: 'SPY',
+                  name: 'S&P 500 ETF Trust',
+                  price: marketData?.price || '0.00',
+                  change: (marketData?.change >= 0 ? '+' : '') + (marketData?.change_pct || '0.00') + '%'
+                }} sparkline={sparkline} />
+                
+                {/* Other mini tickers (mock) */}
+                <div className="grid grid-cols-2 gap-4">
+                   <MiniTicker ticker={{ symbol: 'QQQ', name: 'Nasdaq 100', price: '442.10', change: '+2.10%' }} data={[]} />
+                   <MiniTicker ticker={{ symbol: 'VIX', name: 'Volatility', price: marketData?.vix || '0.00', change: '-1.4%' }} data={[]} />
+                </div>
               </div>
 
-              {/* Strategy Rankings */}
-              <div className="bg-[#161a23] border border-gray-800 rounded-2xl overflow-hidden">
-                <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-                  <h3 className="text-md font-bold text-white">Strategy Alpha Rankings</h3>
-                  <button className="text-[10px] text-emerald-400 font-bold hover:underline">VIEW ALL</button>
-                </div>
-                <div className="p-4">
-                  <div className="space-y-4">
-                    {strategyRankings.map((s, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-800/50 transition-colors group cursor-pointer border border-transparent hover:border-gray-700">
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold",
-                            i === 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-gray-800 text-gray-500"
-                          )}>
-                            {i + 1}
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">{s.name}</p>
-                            <p className="text-[10px] text-gray-500">Sharpe: {s.sharpe} • Win Rate: {s.winRate}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-emerald-400 font-mono">{s.return}</p>
-                          <TrendingUp size={12} className="text-emerald-500 ml-auto" />
-                        </div>
-                      </div>
-                    ))}
+              {/* System Console / Errors */}
+              <div className="bg-[#161a23] border border-gray-800 rounded-2xl p-6">
+                <h3 className="text-md font-bold text-white mb-6 flex items-center gap-2">
+                  <Activity size={18} className="text-emerald-500" /> Live Console
+                </h3>
+                <div className="space-y-3 max-h-[300px] overflow-y-auto no-scrollbar font-mono text-[10px]">
+                  {(status.errors || []).length > 0 ? status.errors.map((err, i) => (
+                    <div key={i} className="text-red-400 border-l-2 border-red-500/50 pl-3 py-1 bg-red-500/5">
+                      {err}
+                    </div>
+                  )) : (
+                    <div className="text-emerald-400 border-l-2 border-emerald-500/50 pl-3 py-1 bg-emerald-500/5">
+                      System operational. No errors detected. Heartbeat: {new Date(status.last_heartbeat).toLocaleTimeString()}
+                    </div>
+                  )}
+                  <div className="text-gray-500 border-l-2 border-gray-700 pl-3 py-1">
+                    Orchestrator Uptime: {Math.floor(status.uptime_seconds / 60)}m {Math.floor(status.uptime_seconds % 60)}s
+                  </div>
+                  <div className="text-gray-500 border-l-2 border-gray-700 pl-3 py-1">
+                    Signals Evaluated: {status.signals_evaluated}
                   </div>
                 </div>
               </div>
@@ -373,10 +348,10 @@ export default function App() {
                 </h3>
                 <div className="space-y-4">
                   {[
-                    { label: 'VIX Volatility', value: '14.22', status: 'Stable', color: 'text-emerald-400' },
-                    { label: '10Y Treasury', value: '4.25%', status: 'Rising', color: 'text-red-400' },
-                    { label: 'Insider Bias', value: '1.24', status: 'Accumulating', color: 'text-emerald-400' },
-                    { label: 'AI Sentiment', value: '78/100', status: 'Bullish', color: 'text-emerald-400' }
+                    { label: 'VIX Volatility', value: marketData?.vix || '0.00', status: marketData?.vix > 30 ? 'Hostile' : 'Stable', color: marketData?.vix > 30 ? 'text-red-400' : 'text-emerald-400' },
+                    { label: 'RSI (1D)', value: marketData?.rsi || '0.00', status: marketData?.rsi > 70 ? 'Overbought' : (marketData?.rsi < 30 ? 'Oversold' : 'Neutral'), color: 'text-white' },
+                    { label: 'SMA 20/50', value: 'Trend', status: (marketData?.price > marketData?.sma_50) ? 'Bullish' : 'Bearish', color: (marketData?.price > marketData?.sma_50) ? 'text-emerald-400' : 'text-red-400' },
+                    { label: 'Consec. Losses', value: status.consecutive_losses || '0', status: (status.consecutive_losses >= 2) ? 'Warning' : 'Healthy', color: (status.consecutive_losses >= 2) ? 'text-red-400' : 'text-emerald-400' }
                   ].map((item, i) => (
                     <div key={i} className="flex items-center justify-between py-2 border-b border-gray-800 last:border-0">
                       <div>
@@ -385,11 +360,6 @@ export default function App() {
                       </div>
                       <div className="text-right">
                         <p className={cn("text-[10px] font-bold uppercase tracking-wider", item.color)}>{item.status}</p>
-                        <div className="flex gap-1 mt-1">
-                          {[1,2,3,4,5].map(b => (
-                            <div key={b} className={cn("w-1.5 h-1.5 rounded-full", b <= (4-i) ? "bg-emerald-500" : "bg-gray-800")} />
-                          ))}
-                        </div>
                       </div>
                     </div>
                   ))}

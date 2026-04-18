@@ -55,13 +55,28 @@ async def get_live_status():
     return LiveStatusResponse(**status)
 
 
+@router.get("/account")
+async def get_account_summary():
+    """Get real-time account info from IBKR."""
+    if _orchestrator is None:
+        return {"error": "Orchestrator not initialized"}
+    return _orchestrator.get_account_summary()
+
+
 @router.get("/positions")
 async def get_positions():
-    """Get active positions."""
+    """Get real-time positions from IBKR."""
     if _orchestrator is None:
         return {"positions": []}
+    return {"positions": _orchestrator.get_live_positions()}
 
-    return {"positions": _orchestrator.status.get("active_positions", [])}
+
+@router.get("/orders")
+async def get_orders():
+    """Get active orders from IBKR."""
+    if _orchestrator is None:
+        return {"orders": []}
+    return {"orders": _orchestrator.get_live_orders()}
 
 
 @router.post("/emergency-stop", response_model=EmergencyStopResponse)
