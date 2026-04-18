@@ -98,6 +98,63 @@ class MLSignalFilter:
         
         return True, f"Trained with {len(X)} trades. Reliability: {self.reliability_score:.2f}"
 
+    def train_0dte(self, data, trades):
+        """Specialized training for the 1-minute 0DTE VWAP Breakout model."""
+        if len(trades) < 5: 
+            return False, f"Insufficient 1m trade data: Found {len(trades)}. Need at least 5 for 0DTE training."
+
+        df_trades = pd.DataFrame(trades)
+        df_trades['label'] = (df_trades['PnL'] > 0).astype(int)
+        
+        # Specific features for the 0DTE live hub
+        training_features = ['MACD_Hist_Dist', 'CMF', 'VWAP_Proxy_Dist']
+        
+        training_data = []
+        labels = []
+        for _, trade in df_trades.iterrows():
+            entry_date = trade['Date In']
+            if entry_date in data.index:
+                feat_row = data.loc[entry_date][training_features]
+                if not feat_row.isnull().any():
+                    training_data.append(feat_row.values)
+                    labels.append(trade['label'])
+
+        if len(training_data) < 5:
+            return False, "Not enough valid feature rows found for 0DTE."
+
+        X = np.array(training_data).astype(float)
+        y = np.array(labels)
+        
+        if len(np.unique(y)) < 2:
+            return False, "Need both Winners and Losers to learn 0DTE signals."
+
+        param_dist = {
+            'n_estimators': [50, 100],
+            'max_depth': [2, 3],
+            'learning_rate': [0.05, 0.1]
+        }
+        
+        from sklearn.model_selection import TimeSeriesSplit, RandomizedSearchCV
+        tscv = TimeSeriesSplit(n_splits=2)
+        random_search = RandomizedSearchCV(
+            self.model, param_distributions=param_dist, 
+            n_iter=5, cv=tscv, scoring='accuracy', n_jobs=-1, random_state=42
+        )
+        
+        random_search.fit(X, y)
+        self.model = random_search.best_estimator_
+        self.reliability_score = random_search.best_score_
+        self.is_trained = True
+        
+        # Save model specifically for live trading hub
+        import joblib
+        import os
+        model_path = os.path.join(os.path.dirname(__file__), 'models', 'my_0dte_model.pkl')
+        os.makedirs(os.path.dirname(model_path), exist_ok=True)
+        joblib.dump(self.model, model_path)
+        
+        return True, f"0DTE Model trained with {len(X)} trades and saved to {model_path}."
+
     def predict(self, feature_vector):
         if not self.is_trained:
             return 1.0
