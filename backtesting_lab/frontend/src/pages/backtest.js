@@ -65,6 +65,8 @@ export async function renderBacktest(container) {
               <div class="input-group">
                 <label class="input-label">Interval</label>
                 <select class="input" id="bt-interval">
+                  <option value="1m">1 Minute</option>
+                  <option value="5m">5 Minutes</option>
                   <option value="1d" selected>Daily</option>
                   <option value="1h">Hourly</option>
                 </select>
