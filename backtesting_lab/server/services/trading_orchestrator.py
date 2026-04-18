@@ -183,6 +183,9 @@ class TradingOrchestrator:
     @property
     def status(self) -> dict:
         """Current system status."""
+        enabled_ids = self._config.strategies.enabled
+        enabled_names = [f"Strategy {i}" for i in enabled_ids]
+        
         return {
             "is_running": self._is_running,
             "mode": self._config.system.mode,
@@ -192,6 +195,7 @@ class TradingOrchestrator:
             "signals_evaluated": self._signals_evaluated,
             "trades_executed": self._trades_executed,
             "active_positions": self._positions.copy(),
+            "enabled_strategies": enabled_names,
             "daily_pnl": round(self._daily_pnl, 2),
             "errors": self._errors[-10:],  # Last 10 errors
             "consecutive_losses": self._consecutive_losses,

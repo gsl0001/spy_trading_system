@@ -9,6 +9,7 @@ let statusInterval = null;
 export async function renderDeployment(container) {
   container.innerHTML = `
     <div class="page-enter">
+      <div id="dep-active-banner"></div>
       <div class="page-header">
         <div>
           <div class="page-badge">▶ COMMAND CENTER</div>
@@ -131,6 +132,33 @@ async function refreshStatus() {
 }
 
 function updateStatusUI(s) {
+  // Active Strategy Banner
+  const bannerEl = document.getElementById('dep-active-banner');
+  if (bannerEl) {
+    if (s.is_running) {
+      const strats = s.enabled_strategies && s.enabled_strategies.length > 0 
+        ? s.enabled_strategies.join(', ') 
+        : 'AI Selective Master';
+      bannerEl.innerHTML = `
+        <div style="background: var(--accent-green); color: white; padding: 10px 20px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; animation: page-fade-in 0.5s ease-out;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 18px;">🤖</span>
+            <div>
+              <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; opacity: 0.8;">System Live & Trading</div>
+              <div style="font-size: 14px; font-weight: 700;">Active: ${strats}</div>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; opacity: 0.8;">Mode</div>
+            <div style="font-size: 14px; font-weight: 700;">${s.mode.toUpperCase()} ${s.dry_run ? '(DRY)' : ''}</div>
+          </div>
+        </div>
+      `;
+    } else {
+      bannerEl.innerHTML = '';
+    }
+  }
+
   // Status body
   const statusEl = document.getElementById('dep-status-body');
   if (statusEl) {

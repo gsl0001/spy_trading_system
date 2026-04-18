@@ -9,6 +9,7 @@ import { renderEquityChart } from '../components/chart.js';
 export async function renderDashboard(container) {
   container.innerHTML = `
     <div class="page-enter">
+      <div id="dash-active-banner"></div>
       <div class="page-header">
         <div>
           <div class="page-badge">◈ LIVE MONITOR</div>
@@ -95,6 +96,33 @@ async function loadDashboardData() {
     const ml = mlStatus.status === 'fulfilled' ? mlStatus.value : {};
     const trades = tradesRes.status === 'fulfilled' ? tradesRes.value : { trades: [] };
     const perf = perfReport.status === 'fulfilled' ? perfReport.value : {};
+
+    // Active Strategy Banner
+    const bannerEl = document.getElementById('dash-active-banner');
+    if (bannerEl) {
+      if (sys.is_running) {
+        const strats = sys.enabled_strategies && sys.enabled_strategies.length > 0 
+          ? sys.enabled_strategies.join(', ') 
+          : 'AI Selective Master';
+        bannerEl.innerHTML = `
+          <div style="background: var(--accent-green); color: white; padding: 10px 20px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; animation: page-fade-in 0.5s ease-out;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 18px;">🤖</span>
+              <div>
+                <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; opacity: 0.8;">System Live & Trading</div>
+                <div style="font-size: 14px; font-weight: 700;">Active: ${strats}</div>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; opacity: 0.8;">Mode</div>
+              <div style="font-size: 14px; font-weight: 700;">${sys.mode.toUpperCase()} ${sys.dry_run ? '(DRY)' : ''}</div>
+            </div>
+          </div>
+        `;
+      } else {
+        bannerEl.innerHTML = '';
+      }
+    }
 
     // Price hero
     const heroEl = document.getElementById('dash-hero-price');

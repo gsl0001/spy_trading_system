@@ -121,6 +121,7 @@ class LiveStatusResponse(BaseModel):
     signals_evaluated: int = 0
     trades_executed: int = 0
     active_positions: list[dict] = []
+    enabled_strategies: list[str] = []
     daily_pnl: float = 0.0
     errors: list[str] = []
 
